@@ -1,0 +1,188 @@
+import edu.princeton.cs.algs4.BinarySearchST;
+import edu.princeton.cs.algs4.RedBlackBST;
+
+import java.util.ArrayList;
+import java.util.Collections;
+//import org.json.simple.JSONArray;
+//import org.json.simple.JSONObject;
+//import org.json.simple.parser.JSONParser;
+//import org.json.simple.parser.ParseException;
+//
+//import java.io.FileNotFoundException;
+//import java.io.FileReader;
+//import java.io.IOException;
+
+class LongJump {
+//    BinarySearchST<Integer, Integer> BST = new BinarySearchST<Integer, Integer>();
+    ArrayList<Integer> jump_list = new ArrayList<Integer>();
+    RedBlackBST<Integer, Integer> RB_BST = new RedBlackBST<Integer, Integer>();
+    public LongJump(int[] playerList){
+//        for (int j : playerList) {
+//            this.BST.put(j, j);
+//        }
+
+//        // -----------------------------------------
+
+//        for (int j = playerList.length-1; j>=0 ; j-- ) {
+//            RB_BST.put(playerList[j], playerList[j]);
+//        }
+
+        //        // -----------------------------------------
+        for (int j : playerList) jump_list.add(j);
+    }
+    // Add new player in the competition with different distance
+    public void addPlayer(int distance) {
+
+//        this.BST.put(distance,distance);
+        //        // -----------------------------------------
+//        RB_BST.put(distance,distance);
+        //        // -----------------------------------------
+        jump_list.add(distance);
+    }
+    public int winnerDistances(int from, int to) {
+//        int top = BST.floor(to);
+//        int bot = BST.ceiling(from);
+//        int sum = 0;
+//        for(int i =bot; i<=top ; i++ ){
+//            if(BST.contains(i)){
+//                sum += BST.get(i);
+//            }
+//        }
+// //----------------------------------------------
+//        int top = RB_BST.floor(to);
+//        int bot = RB_BST.ceiling(from);
+//        int sum = 0;
+//        for(int i =bot; i<=top ; i++ ){
+//            if(RB_BST.contains(i)){
+//                sum += RB_BST.get(i);
+//            }
+//        }
+        // //----------------------------------------------
+
+//        Iterable<Integer> sum1 = RB_BST.keys(from,to);
+//        int sum=0;
+//        for(int s: sum1) sum += s;
+
+        // //----------------------------------------------
+//        int size1 = RB_BST.size(from,to);
+//        int bot_rank;
+//        int top_rank;
+//        bot_rank = RB_BST.rank(from);
+//
+//        if(RB_BST.contains(to)){
+//            top_rank = RB_BST.rank(to);
+//        }
+//        else{
+//            top_rank = RB_BST.rank(to)-1;
+//        }
+//
+//        int sum=0;
+//        for(int i=bot_rank; i<=top_rank ; i++ ){
+//            sum += RB_BST.select(i);
+//        }
+
+      //  //-------------------------------------------
+        Collections.sort(jump_list);
+        int sum=0;
+        for (int k : jump_list) {
+            if(from<=k && k<=to){
+                sum += k;
+            }
+            else if(k>to){
+                return sum;
+            }
+        }
+        return sum;
+
+    }
+    public static void main(String[] args) {
+//        test t = new test(args);
+        LongJump solution = new LongJump(new int[]{2,5,6});
+        System.out.println(solution.winnerDistances(3,10));
+
+        System.out.println(solution.jump_list.get(3));
+
+        solution.addPlayer(10);
+        solution.addPlayer(8);
+
+        System.out.println(solution.winnerDistances(3,10));
+
+
+        System.out.println("-----------------------------");
+
+        LongJump solution2 = new LongJump(new int[]{2,5,7,9,10,11,13});
+        System.out.println(solution2.winnerDistances(9,13));
+        solution2.addPlayer(4);
+        System.out.println(solution2.winnerDistances(2,10));
+        solution2.addPlayer(6);
+        System.out.println(solution2.winnerDistances(2,11));
+        solution2.addPlayer(20);
+        System.out.println(solution2.winnerDistances(10,20));
+    }
+
+}
+//
+
+//
+//class test{
+//    public test(String[] args) {
+//        LongJump g;
+//        JSONParser jsonParser = new JSONParser();
+//        try (FileReader reader = new FileReader(args[0])) {
+//            JSONArray all = (JSONArray) jsonParser.parse(reader);
+//            int count = 0;
+//            for (Object CaseInList : all) {
+//                count++;
+//                JSONArray a = (JSONArray) CaseInList;
+//                int testSize = 0;
+//                int waSize = 0;
+//                System.out.print("Case ");
+//                System.out.println(count);
+//                //Board Setup
+//                JSONObject argsSetting = (JSONObject) a.get(0);
+//                a.remove(0);
+//
+//                JSONArray argSettingArr = (JSONArray) argsSetting.get("args");
+//
+//                int[] arr=new int[argSettingArr.size()];
+//                for(int k=0;k<argSettingArr.size();k++) {
+//                    arr[k] = (int)(long) argSettingArr.get(k);
+//                }
+//                g = new LongJump(arr);
+//
+//                for (Object o : a) {
+//                    JSONObject person = (JSONObject) o;
+//
+//                    String func = person.get("func").toString();
+//                    JSONArray arg = (JSONArray) person.get("args");
+//
+//                    switch (func) {
+//                        case "addPlayer" -> g.addPlayer(Integer.parseInt(arg.get(0).toString()));
+//                        case "winnerDistances" -> {
+//                            testSize++;
+//                            Integer t_ans = (int)(long)person.get("answer");
+//                            Integer r_ans = g.winnerDistances(Integer.parseInt(arg.get(0).toString()),
+//                                    Integer.parseInt(arg.get(1).toString()));
+//                            if (t_ans.equals(r_ans)) {
+//                                System.out.println("winnerDistances : AC");
+//                            } else {
+//                                waSize++;
+//                                System.out.println("winnerDistances : WA");
+//                                System.out.println("Your answer : "+r_ans);
+//                                System.out.println("True answer : "+t_ans);
+//                            }
+//                        }
+//                    }
+//
+//                }
+//                System.out.println("Score: " + (testSize - waSize) + " / " + testSize + " ");
+//            }
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } catch (ParseException e) {
+//            e.printStackTrace();
+//        }
+//    }
+//}

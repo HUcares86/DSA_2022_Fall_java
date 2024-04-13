@@ -1,0 +1,100 @@
+import edu.princeton.cs.algs4.MinPQ;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+class CovidSimulation {
+    City[] cities;
+    MinPQ<Events> PQ = new MinPQ<Events>();
+    int N; // number of cities
+    public static class City{
+        int Citizen_num, b_recover_date,  b_must_recover;
+        public City(int Citizen_num, int b_recover_date, int b_must_recover){
+            this.Citizen_num = Citizen_num;
+            this.b_recover_date = b_recover_date;
+            this. b_must_recover =  b_must_recover;
+        }
+    }
+    public static class Events implements Comparable<Events>{
+        int date, attack_city, Traveler_num, from_City, to_City, tra_recover_date;
+        public Events(int date, int attack_city, int Traveler_num, int from_City, int to_City, int tra_recover_date){
+            this.date = date;
+            this.attack_city = attack_city;
+            this.Traveler_num = Traveler_num;
+            this.from_City = from_City;
+            this.to_City = to_City;
+            this.tra_recover_date = tra_recover_date;
+        }
+        public int compareTo(Events that){
+            if (this.date < that.date) return -1;
+            else if (this.date > that.date) return 1;
+            else if (this.attack_city >= 0 && that.attack_city < 0) return -1;
+            else if (this.attack_city < 0 && that.attack_city >= 0) return 1;
+            else return 0;
+        }
+    }
+    public CovidSimulation(int[] number_of_citizens) {
+        N = number_of_citizens.length;
+        cities = new City[number_of_citizens.length];
+        for (int i = 0; i < N; i++){
+            cities[i] = new City(number_of_citizens[i], -1, -1);
+        }
+    }
+    public void virusAttackPlan(int city, int date){
+        PQ.insert(new Events(date, city, -1, -1 ,-1,  -1));
+            }
+    public void TravelPlan(int NumberOfTraveller, int FromCity, int ToCity, int DateOfDeparture, int DateOfArrival){
+        PQ.insert(new Events(DateOfDeparture, -DateOfArrival, NumberOfTraveller, FromCity, ToCity,  -1));
+           }
+    public int CityWithTheMostPatient(int date){
+        int max_infected = 0;
+        int max_infected_City = -1;
+
+        while (!PQ.isEmpty()){
+            Events latestEvent;
+            latestEvent = PQ.delMin();
+            if (latestEvent.date <= date ){
+                if (latestEvent.attack_city >= 0 && cities[latestEvent.attack_city].b_recover_date < latestEvent.date){
+                    cities[latestEvent.attack_city].b_recover_date = latestEvent.date + 3;
+                    cities[latestEvent.attack_city].b_must_recover = latestEvent.date + 6;
+                }
+                else if (latestEvent.attack_city < -1 ){
+                    cities[latestEvent.from_City].Citizen_num -= latestEvent.Traveler_num;
+                    PQ.insert(new Events(-latestEvent.attack_city, -1, latestEvent.Traveler_num, latestEvent.from_City,
+                                latestEvent.to_City, cities[latestEvent.from_City].b_recover_date));
+                }
+                else if (latestEvent.attack_city == -1){
+                    cities[latestEvent.to_City].Citizen_num += latestEvent.Traveler_num;
+                    if (latestEvent.date <= latestEvent.tra_recover_date) {
+                        if (latestEvent.date <= cities[latestEvent.to_City].b_recover_date) {
+                            cities[latestEvent.to_City].b_recover_date =
+                                    min(cities[latestEvent.to_City].b_must_recover,
+                                            max(cities[latestEvent.to_City].b_recover_date, latestEvent.tra_recover_date));
+                        } else {
+                            cities[latestEvent.to_City].b_recover_date = latestEvent.date + 3;
+                            cities[latestEvent.to_City].b_must_recover = latestEvent.date + 6;
+                        }
+                    }
+                }
+            }
+            else {
+                PQ.insert(latestEvent);
+                for (int i = 0; i < N; i++){
+                    if (cities[i].Citizen_num >= max_infected && cities[i].b_recover_date>= date){
+                        max_infected_City = i;
+                        max_infected = cities[i].Citizen_num;
+                       }
+                }
+                return max_infected_City;
+            }
+        }
+        if(PQ.isEmpty()) {
+            for (int i = 0; i < N; i++) {
+                if (cities[i].Citizen_num >= max_infected && cities[i].b_recover_date >= date) {
+                    max_infected_City = i;
+                    max_infected = cities[i].Citizen_num;
+                }
+            }
+            return max_infected_City;
+        }
+        return max_infected_City;
+    }
+}

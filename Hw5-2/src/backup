@@ -1,0 +1,139 @@
+import edu.princeton.cs.algs4.MinPQ;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+
+class CovidSimulation {
+    City[] cities;  // array of cities
+    MinPQ<Events> PQ = new MinPQ<Events>();   // priority queue
+    int N; // number of cities
+    //int today_date;
+    public static class City{
+        int Citizen_num, b_recover_date,  b_must_recover;
+        public City(int Citizen_num, int b_recover_date, int b_must_recover){
+            this.Citizen_num = Citizen_num;
+            this.b_recover_date = b_recover_date;  //此天之後康復
+            this. b_must_recover =  b_must_recover;  //最晚在此天之後必會康復
+        }
+    }
+    public static class Events implements Comparable<Events>{
+        int date, attack_city, Traveler_num, from_City, to_City, tra_recover_date;
+        public Events(int date, int attack_city, int Traveler_num, int from_City, int to_City, int tra_recover_date){
+            this.date = date;
+            this.attack_city = attack_city;
+            this.Traveler_num = Traveler_num;
+            this.from_City = from_City;
+            this.to_City = to_City;
+            this.tra_recover_date = tra_recover_date;
+        }
+        public int compareTo(Events that){
+            if (this.date < that.date) return -1;
+            else if (this.date > that.date) return 1;
+            else if (this.attack_city >= 0 && that.attack_city < 0) return -1; //同日期則病毒先入侵，旅人在到達
+            else if (this.attack_city < 0 && that.attack_city >= 0) return 1;
+            else return 0;
+        }
+    }
+    public CovidSimulation(int[] number_of_citizens) {
+        //The initial number of people in each city is defined here.
+        N = number_of_citizens.length;
+        cities = new City[N];
+        for (int i = 0; i < N; i++){
+            cities[i] = new City(number_of_citizens[i], -1, -1);
+        }
+    }
+
+
+    //將 virusAttackPlan 和 TravelPlan 做成 event 剩下的參數用 0 1 -1 來表明現在士紳麽 event
+    public void virusAttackPlan(int city, int date){
+        PQ.insert(new Events(date, city, -1, -1 ,-1,  -1));
+        // Event(int date, int attack_city, int Traveler_num, int from_City, int to_City, int dep_or_Arr, int tra_recover_date)
+    }
+
+    public void TravelPlan(int NumberOfTraveller, int FromCity, int ToCity, int DateOfDeparture, int DateOfArrival){
+        PQ.insert(new Events(DateOfDeparture, -DateOfArrival, NumberOfTraveller, FromCity, ToCity,  -1));
+        // Event(int date, int attack_city, int Traveler_num, int from_City, int to_City, int dep_or_Arr, int tra_recover_date)
+    }
+
+    public int CityWithTheMostPatient(int date){
+        //return the index of city which has the most patients
+        //today_date = date;  //今天日期
+        while (true){
+            //today_date = date;
+            int max_infected = 0;   //最大感染人數
+            int max_infected_City = -1; //最大感染人數城市
+            int max_people = 0;
+            Events latestEvent;
+            if (!PQ.isEmpty()){ //priority queue 有事件
+                latestEvent = PQ.delMin();
+                if (latestEvent.date <= date ){  //下一個事件日期還沒超過input日期
+                    if (latestEvent.attack_city >= 0 && cities[latestEvent.attack_city].b_recover_date < latestEvent.date){
+                        // >= 0 代表是病毒攻擊事件
+                        //被攻擊城市未確診
+                        cities[latestEvent.attack_city].b_recover_date = latestEvent.date + 3;
+                        //+3代表生病，例如：1+3=4，第四天還是生病，但明天第五天就好了
+                        cities[latestEvent.attack_city].b_must_recover = latestEvent.date + 6;
+                        //+6代表最久生病，例如：1+6=7，最多生病到第7天
+                    }
+                    else if (latestEvent.attack_city < -1 ){  // < -1 代表是旅人出發事件
+                        cities[latestEvent.from_City].Citizen_num -= latestEvent.Traveler_num;  //旅人所在城市人數減少
+                        //若旅人出發後城市沒人則城市康復
+                        // 這條件好像沒差，不影響
+                        //if (cities[latestEvent.from_City].Citizen_num== 0) cities[latestEvent.from_City].b_must_recover = latestEvent.date - 1;
+                        PQ.insert(new Events(-latestEvent.attack_city, -1, latestEvent.Traveler_num, latestEvent.from_City,
+                                latestEvent.to_City, cities[latestEvent.from_City].b_recover_date)); //新增抵達事件
+                        //
+                    }
+                    else if (latestEvent.attack_city == -1){  //此事件是旅人抵達事件
+                        cities[latestEvent.to_City].Citizen_num += latestEvent.Traveler_num;  //旅人抵達城市人數增加
+//                        if(cities[latestEvent.to_City].Citizen_num > max_people){
+//                            max_people = cities[latestEvent.to_City].Citizen_num;
+//                        }
+                        if (latestEvent.date <= latestEvent.tra_recover_date) {  //旅人是確診
+                            if (latestEvent.date <= cities[latestEvent.to_City].b_recover_date) {
+                                //旅人抵達日<=城市康復日,城市目前是確診狀態
+                                cities[latestEvent.to_City].b_recover_date =
+                                        min(cities[latestEvent.to_City].b_must_recover,
+                                                max(cities[latestEvent.to_City].b_recover_date, latestEvent.tra_recover_date));
+                                // 首先比較旅人康復跟城市康復，只要有人確診就不算康復，所以要拿比較大的
+                                // 再來要比較“康復日“與“必須康復日“，“康復日“最大不能超過“必須康復日”，所以要選小
+                            } else {  //旅人抵達日>城市康復日,城市目前未確診，這是新的一輪的確診所以+ 3，+ 6
+                                cities[latestEvent.to_City].b_recover_date = latestEvent.date + 3;
+                                cities[latestEvent.to_City].b_must_recover = latestEvent.date + 6;
+                            }
+                        }
+                    }
+                }
+                else {
+                    //下一個事件日期已經超過input日期
+                    PQ.insert(latestEvent);
+                    for (int i = 0; i < N; i++){
+                        if (cities[i].Citizen_num >= max_infected && cities[i].b_recover_date>= date){
+                            //城市確診且人數較多或index較大
+                            // recoveryDate 是最後一天生病的日子所以是>=
+                                max_infected_City = i;
+                                max_infected = cities[i].Citizen_num;
+//                                if(max_infected == max_people){
+//                                    return max_infected_City;
+//                                }
+                        }
+                    }
+                    return max_infected_City;
+                }
+            }
+            else{
+                //pq沒有事件了
+                for (int i = 0; i < N; i++){
+                    if(cities[i].Citizen_num >= max_infected && cities[i].b_recover_date >= date ){
+                            max_infected_City = i;
+                            max_infected = cities[i].Citizen_num;
+//                            if(max_infected == max_people){
+//                                return max_infected_City;
+//                            }
+                    }
+                }
+                return max_infected_City;
+            }
+        }
+    }
+}

@@ -1,0 +1,202 @@
+import edu.princeton.cs.algs4.BST;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.NoSuchElementException;
+
+// copy BST but add features we want
+// we want to know the left tree sum and right tree sum of a node
+class BSTree{
+    private Node root;
+    public static class Node {
+        private final int key;
+//        private int val;
+        private Node left, right;
+        private int size;
+        private int left_tree_sum;
+        public Node(int key, int size, int left_tree_sum) {//, int val
+            this.key = key;
+//            this.val = val;
+            this.size = size;
+            this.left_tree_sum = left_tree_sum;
+        }
+    }
+    BSTree() {}
+    // same as edu.princeton.cs.algs4.BST
+    public boolean isEmpty() {
+        return size() == 0;
+    }
+    public int size() {
+        return size(root);
+    }
+    private int size(Node x) {
+        if (x == null) return 0;
+        else return x.size;
+    }
+    public void put(int key) { //, int val
+        root = put(root, key);//, val
+    }
+    private Node put(Node x, int key) {//, int val
+        // 一開始沒東西，給root
+        if (x == null) return new Node(key, 1, 0);//, val
+        int cmp = key - x.key;  // cmp = 新加進來的跟node比大小
+        if      (cmp < 0) {// 新加進來的比較小
+            x.left = put(x.left, key); // 把他送到左邊, val
+            // 送到左邊之後我們這個node的 left_tree_sum 要更新，
+            x.left_tree_sum += key;
+        }
+        else if (cmp > 0) {// 新加進來的比較大
+            x.right = put(x.right, key);// 把他送到右邊, val
+            // 送到右邊之後我們這個node的 right_tree_sum 要更新，
+//            x.right_tree_sum += key;
+        }
+//        else
+//            x.val   = val;  // 一樣大，更新val
+        // 更新 size
+        x.size += 1 ;
+        return x;
+    }
+
+    // 有用到的功能------------------------------------------------------------------------------
+    public int ceiling(int key) {
+        Node x = ceiling(root, key);
+        if (x == null) return 0;
+        else return x.key;
+    }
+    private Node ceiling(Node x, int key) {
+        // 原本的ceiling用rank會太慢
+        if (x == null) return null;
+        int cmp = key - x.key;
+        if (cmp == 0) return x;
+        if (cmp < 0) {
+            Node t = ceiling(x.left, key);
+            if (t != null) return t;
+            else return x;
+        }
+        return ceiling(x.right, key);
+    }
+
+    // 額外加的
+    public int sum_smaller(int key){    //得到比自己小的所有value, 包含自己
+        int[] ans_sum = new int[1];
+        Node x = sum_smaller(root, key, ans_sum);
+        return ans_sum[0];
+    }
+
+    private Node sum_smaller(Node x, int key, int[] ans_sum){
+        if (x == null) return null;
+        int cmp = key - x.key;
+        if (cmp == 0){  // 找到一樣大小（自己），x.left_tree_sum + x.key 因為邊界，自己也要算進去
+            ans_sum[0] += x.left_tree_sum + x.key;
+            return x;
+        }
+        else if (cmp < 0){// 比較小
+            // 送到左邊去找
+            return sum_smaller(x.left , key, ans_sum);
+        }
+        else {// 比較大
+            // 整個左邊都比我們小，全部加起來
+            ans_sum[0] += x.left_tree_sum + x.key;
+            // 送到右邊去找
+            Node t = sum_smaller(x.right, key, ans_sum);
+            if (t == null) return x;    // 沒有右邊
+            else return t;
+        }
+    }
+    // 沒用到的功能------------------------------------------------------------------------------
+//    public int get(int key) {
+//        return get(root, key);
+//    }
+//
+//    private int get(Node x, int key) {
+//        if (x == null) return -1;   // if can't find ans
+//        int cmp = key - x.key;
+//        if      (cmp < 0) return get(x.left, key);
+//        else if (cmp > 0) return get(x.right, key);
+//        else              return x.val;
+//    }
+//    public int floor(int key) {
+//        if (isEmpty()) throw new NoSuchElementException("calls floor() with empty symbol table");
+//        Node x = floor(root, key);
+//        if (x == null) throw new NoSuchElementException("argument to floor() is too small");
+//        else return x.key;
+//    }
+//    private Node floor(Node x, int key) {
+//        if (x == null) return null;
+//        int cmp = key- x.key;
+//        if (cmp == 0) return x;
+//        if (cmp <  0) return floor(x.left, key);
+//        Node t = floor(x.right, key);
+//        if (t != null) return t;
+//        else return x;
+//    }
+//
+//    public int select(int rank) {
+//        if (rank < 0 || rank >= size()) {
+//            throw new IllegalArgumentException("argument to select() is invalid: " + rank);
+//        }
+//        return select(root, rank);
+//    }
+//    private int select(Node x, int rank) {
+//        int leftSize = size(x.left);
+//        if      (leftSize > rank) return select(x.left,  rank);
+//        else if (leftSize < rank) return select(x.right, rank - leftSize - 1);
+//        else                      return x.key;
+//    }
+//
+//    public int rank(int key) {
+//        return rank(key, root);
+//    }
+//    // Number of keys in the subtree less than key.
+//    private int rank(int key, Node x) {
+//        if (x == null) return 0;
+//        int cmp = key- x.key;
+//        if      (cmp < 0) return rank(key, x.left);
+//        else if (cmp > 0) return 1 + size(x.left) + rank(key, x.right);
+//        else              return size(x.left);
+//    }
+//
+//    public boolean contains(int key) {
+//        return get(key) >= 0;
+//    }
+}
+
+class LongJump {
+    BSTree total_jumps;
+    public LongJump(int[] playerList){
+        total_jumps = new BSTree();
+        for (int j : playerList) {
+            total_jumps.put(j);//, j
+        }
+    }
+
+    public void addPlayer(int distance) {
+        total_jumps.put(distance);//,distance
+    }
+
+    public int winnerDistances(int from, int to) {
+        if(!total_jumps.isEmpty()){// 有東西
+            int smaller_than_to = total_jumps.sum_smaller(to);
+            int smaller_than_from = total_jumps.sum_smaller(from);
+            if (from == total_jumps.ceiling(from)) {
+                // 減去了下屆的煙戒條件，把他家回來
+                return smaller_than_to - smaller_than_from + from;
+            }
+            else{
+                return smaller_than_to - smaller_than_from;
+            }
+        }else {// 空的，直接回傳0
+            return 0;
+        }
+
+    }
+
+    public static void main(String[] args) {
+
+        LongJump solution = new LongJump(new int[]{2,5,6});
+        System.out.println(solution.winnerDistances(3,10));
+        solution.addPlayer(10);
+        solution.addPlayer(8);
+        System.out.println(solution.winnerDistances(3,10));
+    }
+}
